@@ -1,87 +1,78 @@
 'use client';
-
 import { useChat } from 'ai/react';
 import { useState } from 'react';
-import { Send, Database, Bot, User } from 'lucide-react';
+import { Send, XCircle } from 'lucide-react';
 
 export default function MyBot() {
   const [kb, setKb] = useState('');
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+  const { messages, input, handleInputChange, handleSubmit, setMessages } = useChat({
     body: { data: { knowledgeBase: kb } },
   });
 
   return (
-    <div className="flex h-screen bg-[#0a0a0a] text-gray-100 font-sans">
-      {/* LEFT SIDEBAR: Knowledge Base */}
-      <aside className="w-80 border-r border-zinc-800 flex flex-col p-6 bg-[#0d0d0d]">
-        <div className="flex items-center gap-2 mb-6">
-          <Database className="text-emerald-500 w-5 h-5" />
-          <h2 className="font-bold tracking-tight text-sm uppercase">Knowledge Base</h2>
+    <div className="flex h-screen bg-[#0a0a0b] text-[#e4e4e7] font-sans selection:bg-green-500/30">
+      {/* Sidebar */}
+      <aside className="w-[320px] border-r border-zinc-800 p-6 flex flex-col bg-[#0c0c0e]">
+        <div className="flex items-center gap-2 mb-8">
+          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+          <h1 className="font-bold tracking-tighter text-xl">MyBot</h1>
         </div>
-        
-        <p className="text-xs text-zinc-500 mb-2">Configure system context:</p>
-        <textarea
-          value={kb}
-          onChange={(e) => setKb(e.target.value)}
-          placeholder="Paste documentation, rules, or facts here..."
-          className="flex-1 w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-sm focus:ring-1 focus:ring-emerald-500 outline-none resize-none"
-        />
-        
-        <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-          <p className="text-[10px] text-emerald-400 leading-tight">
-            SYSTEM ACTIVE: Your bot will now prioritize the data entered above.
-          </p>
+
+        <div className="flex flex-col gap-4">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Knowledge Base</label>
+          <textarea
+            value={kb}
+            onChange={(e) => setKb(e.target.value)}
+            placeholder="Paste your text data here..."
+            className="h-[400px] w-full bg-[#141417] border border-zinc-800 rounded-xl p-4 text-sm focus:ring-1 focus:ring-green-500 outline-none resize-none transition-all"
+          />
+          <button className="w-full bg-[#99ff80] hover:bg-[#b2ff99] text-black font-bold py-3 rounded-xl transition-colors text-xs uppercase tracking-widest">
+            Save & Apply
+          </button>
         </div>
       </aside>
 
-      {/* RIGHT CONTENT: Chat Window */}
+      {/* Main Chat */}
       <main className="flex-1 flex flex-col relative">
-        <header className="p-4 border-b border-zinc-800 bg-[#0a0a0a]/80 backdrop-blur-md sticky top-0 z-10">
-          <h1 className="text-center font-semibold text-zinc-400">MyBot Preview</h1>
+        <header className="flex justify-end p-4 gap-2">
+           <button className="flex items-center gap-1 px-3 py-1 border border-zinc-800 rounded-lg text-[10px] uppercase font-bold hover:bg-zinc-900 transition-colors">
+            <span className="text-green-500 text-lg">○</span> Knowledge Base
+           </button>
+           <button 
+            onClick={() => setMessages([])}
+            className="flex items-center gap-1 px-3 py-1 border border-red-900/30 text-red-400 rounded-lg text-[10px] uppercase font-bold hover:bg-red-950/20 transition-colors">
+            <XCircle size={12} /> Clear Chat
+           </button>
         </header>
 
-        {/* Messages List */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-zinc-600">
-              <Bot size={48} className="mb-4 opacity-20" />
-              <p>Type a message to start testing your prompt.</p>
+        <div className="flex-1 overflow-y-auto px-20 py-10 space-y-8">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+              <div className="w-12 h-12 border border-zinc-700 rotate-45 mb-6" />
+              <h2 className="text-2xl font-medium mb-2">Ready to chat</h2>
+              <p className="max-w-xs text-sm">Ask me anything. Load your knowledge base on the left to give me custom context.</p>
             </div>
-          )}
-          
-          {messages.map((m) => (
-            <div key={m.id} className={`flex gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
-                m.role === 'user' 
-                ? 'bg-emerald-600 text-white rounded-tr-none' 
-                : 'bg-zinc-900 border border-zinc-800 rounded-tl-none'
-              }`}>
-                <div className="flex items-center gap-2 mb-1 opacity-50 text-[10px] font-bold uppercase">
-                  {m.role === 'user' ? <User size={12}/> : <Bot size={12}/>}
-                  {m.role}
+          ) : (
+            messages.map(m => (
+              <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-2xl px-5 py-3 rounded-2xl ${m.role === 'user' ? 'bg-[#18181b] border border-zinc-800' : 'bg-transparent text-lg'}`}>
+                  {m.content}
                 </div>
-                {m.content}
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
-        {/* Input Bar */}
-        <div className="p-6 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] to-transparent">
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-2">
+        <div className="p-10">
+          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto relative group">
             <input
               value={input}
               onChange={handleInputChange}
-              placeholder="Ask MyBot anything..."
-              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-full px-5 py-3 text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
+              placeholder="Type your message..."
+              className="w-full bg-[#141417] border border-zinc-800 rounded-2xl py-5 px-6 outline-none focus:border-zinc-600 transition-all shadow-2xl"
             />
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black p-3 rounded-full transition-colors"
-            >
-              <Send size={18} />
+            <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 bg-[#99ff80] p-2 rounded-lg text-black hover:scale-105 transition-transform">
+              <Send size={20} fill="black" />
             </button>
           </form>
         </div>
